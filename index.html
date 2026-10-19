@@ -59,8 +59,8 @@
 const CONFIG = {
 
   // ── 1. 標題區（顯示在最上方）──
-  title:    "麥當勞早餐 團體訂購",   // 大標題
-  subtitle: "主餐＋飲品各選一項",       // 副標題說明
+  title:    "摩斯早餐 團體訂購",   // 大標題
+  subtitle: "10/28 月會早餐・主餐＋飲品各選一項",       // 副標題說明
 
   // ── 2. Apps Script 網址（沿用你現有的，通常不用改）──
   gasUrl: "https://script.google.com/macros/s/AKfycbwE2pX_-_Rv-S7-n4PiXdZ3KWEo4RAO3gVcynZXBD3JY7x_Zg24MojkUY0E01_ps_5Y/exec",
@@ -73,12 +73,11 @@ const CONFIG = {
 
   // ── 5. 餐點清單（id, 名稱, 價格）想加減幾項都可以 ──
   meals: [
-    { id:"A1", name:"無敵豬肉滿福堡加蛋", price:72 },
-    { id:"A2", name:"番茄嫩蛋焙果堡",             price:65 },
-    { id:"A3", name:"青蔬滿福堡",                 price:58 },
-    { id:"A4", name:"吉事蛋堡(素)",               price:48 },
-    { id:"A5", name:"麥香魚(海鮮)",               price:55 },
-    { id:"A6", name:"豬肉鬆餅",                   price:70 },
+    { id:"A1", name:"超級大麥杏鮑菇珍珠堡(素)", price:105 },
+    { id:"A2", name:"青梅豬排堡(豬)",           price:110 },
+    { id:"A3", name:"元氣牛肉蔬菜堡(牛)",       price:95 },
+    { id:"A4", name:"超級大麥海洋珍珠堡(蝦)",   price:110 },
+    { id:"A5", name:"蕃茄吉士蛋堡",               price:60 },
   ],
 
   // ── 6. 飲料清單（id, 名稱, 價格）──
@@ -110,12 +109,17 @@ const CONFIG = {
     <label>姓名 / 暱稱</label>
     <input id="uname" type="text" placeholder="請輸入您的名字">
   </div>
+  <div class="options" id="noOrderWrap" style="margin-bottom:20px;">
+    <div class="opt" id="noOrder"><div class="left"><span class="tag">X</span><span class="name">不需要訂餐（本次不訂）</span></div></div>
+  </div>
+  <div id="orderArea">
   <div class="section-title"><span class="num">1</span>選擇餐點</div>
   <div class="section-sub" id="mealSub"></div>
   <div class="options" id="meals"></div>
   <div class="section-title"><span class="num">2</span>選擇飲料</div>
   <div class="section-sub" id="drinkSub"></div>
   <div class="options" id="drinks"></div>
+  </div>
 </div>
 
 <div class="barwrap" id="bar">
@@ -127,7 +131,7 @@ const CONFIG = {
 
 <div id="doneView" class="done" style="display:none;">
   <div class="check">✅</div>
-  <h2>點餐完成！</h2>
+  <h2 id="doneTitle">點餐完成！</h2>
   <p>已送出，資料已記錄</p>
   <div class="summary" id="summary"></div>
 </div>
@@ -136,7 +140,7 @@ const CONFIG = {
 
 <script>
 const C=CONFIG;
-let selMeal=null, selDrink=null;
+let selMeal=null, selDrink=null, noOrder=false;
 
 // 套用標題
 document.getElementById("hTitle").textContent=C.title;
@@ -174,28 +178,49 @@ function update(){
   const name=document.getElementById("uname").value.trim();
   const t=(selMeal?selMeal.price:0)+(selDrink?selDrink.price:0);
   const over = C.budget>0 && t>C.budget;
-  const ready = selMeal && selDrink && name && !over;
+  const ready = name && ((selMeal && selDrink) || noOrder) && !over;
 
   if(over){
     hint.innerHTML='<span class="over">超出預算 '+(t-C.budget)+' 元</span>';
+  }else if(noOrder&&name){
+    hint.innerHTML='<span class="ok">✓ 本次不訂餐，可送出</span>';
   }else if(selMeal&&selDrink&&name){
     hint.innerHTML = C.showPrice
       ? '<span class="ok">合計 '+t+' 元，可送出 ✓</span>'
       : '<span class="ok">✓ 已選好，可送出</span>';
   }else{
-    hint.textContent='請填名字並選擇餐點與飲料';
+    hint.textContent='請填名字並選擇餐點與飲料，或選「不需要訂餐」';
   }
   btn.disabled=!ready;
 }
 document.getElementById("uname").addEventListener("input",update);
 
+const noBtn=document.getElementById("noOrder");
+const orderArea=document.getElementById("orderArea");
+noBtn.onclick=()=>{
+  noOrder=!noOrder;
+  noBtn.classList.toggle("sel",noOrder);
+  if(noOrder){
+    selMeal=null; selDrink=null;
+    orderArea.querySelectorAll(".opt").forEach(o=>o.classList.remove("sel"));
+    orderArea.style.opacity="0.35";
+    orderArea.style.pointerEvents="none";
+  }else{
+    orderArea.style.opacity="";
+    orderArea.style.pointerEvents="";
+  }
+  update();
+};
+
 document.getElementById("submitBtn").onclick=async()=>{
   const btn=document.getElementById("submitBtn");
   const name=document.getElementById("uname").value.trim();
-  const t=selMeal.price+selDrink.price;
+  const meal = noOrder ? {id:"X",name:"不需要訂餐",price:0} : selMeal;
+  const drink = noOrder ? {id:"X",name:"不需要訂餐",price:0} : selDrink;
+  const t=meal.price+drink.price;
   const payload={
-    name, mealId:selMeal.id, mealName:selMeal.name, mealPrice:selMeal.price,
-    drinkId:selDrink.id, drinkName:selDrink.name, drinkPrice:selDrink.price,
+    name, mealId:meal.id, mealName:meal.name, mealPrice:meal.price,
+    drinkId:drink.id, drinkName:drink.name, drinkPrice:drink.price,
     side:C.sideNote||"", total:t,
     time:new Date().toLocaleString("zh-TW",{hour12:false})
   };
@@ -208,11 +233,12 @@ document.getElementById("submitBtn").onclick=async()=>{
   }
   let rows=
     `<div class="row"><span>姓名</span><span>${name}</span></div>`+
-    `<div class="row"><span>餐點</span><span>${selMeal.name}</span></div>`+
-    `<div class="row"><span>飲料</span><span>${selDrink.name}</span></div>`;
-  if(C.sideNote) rows+=`<div class="row"><span>附餐</span><span>${C.sideNote}</span></div>`;
-  if(C.showPrice) rows+=`<div class="row"><span>合計</span><span>${t} 元</span></div>`;
+    `<div class="row"><span>餐點</span><span>${meal.name}</span></div>`+
+    `<div class="row"><span>飲料</span><span>${drink.name}</span></div>`;
+  if(C.sideNote && !noOrder) rows+=`<div class="row"><span>附餐</span><span>${C.sideNote}</span></div>`;
+  if(C.showPrice && !noOrder) rows+=`<div class="row"><span>合計</span><span>${t} 元</span></div>`;
   document.getElementById("summary").innerHTML=rows;
+  if(noOrder) document.getElementById("doneTitle").textContent="已登記：本次不訂餐";
   document.getElementById("formView").style.display="none";
   document.getElementById("bar").style.display="none";
   document.getElementById("doneView").style.display="block";
