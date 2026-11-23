@@ -59,8 +59,8 @@
 const CONFIG = {
 
   // ── 1. 標題區（顯示在最上方）──
-  title:    "摩斯早餐 團體訂購",   // 大標題
-  subtitle: "10/28 月會早餐・主餐＋飲品各選一項",       // 副標題說明
+  title:    "麥味登早餐 團體訂購",   // 大標題
+  subtitle: "11/25 早餐・主餐＋附餐（飲料）各選一項",       // 副標題說明
 
   // ── 2. Apps Script 網址（沿用你現有的，通常不用改）──
   gasUrl: "https://script.google.com/macros/s/AKfycbwE2pX_-_Rv-S7-n4PiXdZ3KWEo4RAO3gVcynZXBD3JY7x_Zg24MojkUY0E01_ps_5Y/exec",
@@ -73,20 +73,19 @@ const CONFIG = {
 
   // ── 5. 餐點清單（id, 名稱, 價格）想加減幾項都可以 ──
   meals: [
-    { id:"A1", name:"超級大麥杏鮑菇珍珠堡(素)", price:105 },
-    { id:"A2", name:"青梅豬排堡(豬)",           price:110 },
-    { id:"A3", name:"元氣牛肉蔬菜堡(牛)",       price:95 },
-    { id:"A4", name:"超級大麥海洋珍珠堡(蝦)",   price:110 },
-    { id:"A5", name:"蕃茄吉士蛋堡",               price:60 },
+    { id:"A1", name:"卡滋雞腿漢堡",         price:70 },
+    { id:"A2", name:"超厚牛起司湯種",       price:75 },
+    { id:"A3", name:"花生厚牛起司可頌",     price:75 },
+    { id:"A4", name:"鮮蔬可頌(素食)",       price:55 },
   ],
 
   // ── 6. 飲料清單（id, 名稱, 價格）──
   drinks: [
-    { id:"B1", name:"冰紅茶",     price:0 },
-    { id:"B2", name:"熱紅茶",     price:0 },
-    { id:"B3", name:"熱咖啡",     price:10 },
-    { id:"B4", name:"冰咖啡",     price:10 },
-    { id:"B5", name:"冰奶茶",     price:20 },
+    { id:"B1", name:"冰紅茶",       price:0 },
+    { id:"B2", name:"冰奶茶",       price:0 },
+    { id:"B3", name:"熱紅茶",       price:0 },
+    { id:"B4", name:"熱美式咖啡",   price:0 },
+    { id:"B5", name:"冰美式咖啡",   price:0 },
   ],
 
   // ── 7. 附餐說明（留空字串 "" 就不顯示這行）──
@@ -113,10 +112,10 @@ const CONFIG = {
     <div class="opt" id="noOrder"><div class="left"><span class="tag">X</span><span class="name">不需要訂餐（本次不訂）</span></div></div>
   </div>
   <div id="orderArea">
-  <div class="section-title"><span class="num">1</span>選擇餐點</div>
+  <div class="section-title"><span class="num">1</span>選擇主餐</div>
   <div class="section-sub" id="mealSub"></div>
   <div class="options" id="meals"></div>
-  <div class="section-title"><span class="num">2</span>選擇飲料</div>
+  <div class="section-title"><span class="num">2</span>選擇附餐（飲料）</div>
   <div class="section-sub" id="drinkSub"></div>
   <div class="options" id="drinks"></div>
   </div>
@@ -124,7 +123,7 @@ const CONFIG = {
 
 <div class="barwrap" id="bar">
   <div class="inner">
-    <div class="total"><span id="hint">請選擇餐點與飲料</span></div>
+    <div class="total"><span id="hint">請選擇主餐與附餐</span></div>
     <button class="submit" id="submitBtn" disabled>送出</button>
   </div>
 </div>
@@ -189,7 +188,7 @@ function update(){
       ? '<span class="ok">合計 '+t+' 元，可送出 ✓</span>'
       : '<span class="ok">✓ 已選好，可送出</span>';
   }else{
-    hint.textContent='請填名字並選擇餐點與飲料，或選「不需要訂餐」';
+    hint.textContent='請填名字並選擇主餐與附餐，或選「不需要訂餐」';
   }
   btn.disabled=!ready;
 }
